@@ -107,12 +107,13 @@
 
       // returns the elements for the top level, and the next below it
       getHeadings: function($scope, topLevel) {
-        var topSelector = "h" + topLevel;
+        var headings = [];
+        for (var i = topLevel; i <= 6; i++) {
+          headings.push("h" + i);
+        }
+        var headingList = headings.join()
 
-        var secondaryLevel = topLevel + 1;
-        var secondarySelector = "h" + secondaryLevel;
-
-        return this.findOrFilter($scope, topSelector + "," + secondarySelector);
+        return this.findOrFilter($scope, headingList);
       },
 
       getNavLevel: function(el) {
@@ -120,24 +121,25 @@
       },
 
       populateNav: function($topContext, topLevel, $headings) {
-        var $context = $topContext;
+        var $context = [$topContext];
         var $prevNav;
 
         var helpers = this;
         $headings.each(function(i, el) {
+          var navLevel = helpers.getNavLevel(el) - topLevel + 1;
           var $newNav = helpers.generateNavItem(el);
-          var navLevel = helpers.getNavLevel(el);
 
-          // determine the proper $context
-          if (navLevel === topLevel) {
-            // use top level
-            $context = $topContext;
-          } else if ($prevNav && $context === $topContext) {
-            // create a new level of the tree and switch to it
-            $context = helpers.createChildNavList($prevNav);
-          } // else use the current $context
+          if (navLevel > $context.length) {
+            // create next level
+            $context.push(helpers.createChildNavList($prevNav));
+          } else if (navLevel < $context.length) {
+            // goes up
+            while (navLevel < $context.length) {
+              $context.pop();
+            }
+          }
 
-          $context.append($newNav);
+          $context[$context.length - 1].append($newNav);
 
           $prevNav = $newNav;
         });
